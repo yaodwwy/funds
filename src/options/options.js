@@ -9,7 +9,11 @@ import {
   Button,
   Input,
   Loading,
-  Dialog
+  Dialog,
+  Select,
+  Option,
+  Table,
+  TableColumn
 } from 'element-ui';
 
 import VueClipboard from "vue-clipboard2";
@@ -23,6 +27,10 @@ Vue.use(Button)
 Vue.use(Input)
 Vue.use(Dialog)
 Vue.use(Loading)
+Vue.use(Select)
+Vue.use(Option)
+Vue.use(Table)
+Vue.use(TableColumn)
 
 Vue.prototype.$axios = axios;
 Vue.prototype.$message = Message;

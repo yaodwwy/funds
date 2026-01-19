@@ -4,7 +4,6 @@
     class="container"
     ref="app"
     :class="containerClass"
-    :style="[zoom, grayscale, opacity]"
   >
     <div>
       <div
@@ -92,7 +91,6 @@
       </div>
       <div v-if="isEdit" class="input-row">
         <span>添加新基金:</span>
-        <!-- <input v-model="fundcode" class="btn" type="text" placeholder="请输入基金代码" /> -->
         <el-select
           v-model="fundcode"
           multiple
@@ -289,68 +287,6 @@
             </tr>
           </tbody>
         </table>
-
-        <!-- <table :class="tableHeight" class="detailTable">
-          <thead>
-            <tr>
-              <th class="align-left">
-                <div>基金名称</div>
-                <p>基金编码</p>
-              </th>
-              <th>
-                <div>持有收益率</div>
-                <p>持有收益</p>
-              </th>
-              <th>
-                <div>估算涨幅</div>
-                <p>估算收益</p>
-              </th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr
-              v-for="(el, index) in dataList"
-              :key="el.fundcode"
-              :draggable="isEdit"
-              :class="drag"
-              @dragstart="handleDragStart($event, el)"
-              @dragover.prevent="handleDragOver($event, el)"
-              @dragenter="handleDragEnter($event, el, index)"
-              @dragend="handleDragEnd($event, el)"
-            >
-              <td
-                :class="
-                  isEdit ? 'fundName-noclick align-left' : 'fundName align-left'
-                "
-                :title="el.name"
-                @click.stop="!isEdit && fundDetail(el)"
-              >
-                <div>{{ el.name }}</div>
-                <p>{{ el.fundcode }}</p>
-              </td>
-              <td :class="el.costGains >= 0 ? 'up' : 'down'">
-                <div>{{ el.cost > 0 ? el.costGainsRate + "%" : "" }}</div>
-                <p>
-                  {{
-                  parseFloat(el.costGains).toLocaleString("zh", {
-                    minimumFractionDigits: 2,
-                  })
-                }}
-                </p>
-              </td>
-              <td :class="el.gszzl >= 0 ? 'up' : 'down'">
-                <div>{{ el.gszzl }}%</div>
-                <p>
-                  {{
-                    parseFloat(el.gains).toLocaleString("zh", {
-                      minimumFractionDigits: 2,
-                    })
-                  }}
-                </p>
-              </td>
-            </tr>
-          </tbody>
-        </table> -->
       </div>
     </div>
     <p v-if="isEdit" class="tips">
@@ -367,23 +303,6 @@
         active-text="暗色模式"
       >
       </el-switch>
-      <span class="slider-title">界面灰度：</span>
-      <el-slider
-        class="slider"
-        v-model="grayscaleValue"
-        @change="changeGrayscaleValue"
-        :format-tooltip="formatTooltip"
-      ></el-slider>
-      <span class="slider-title">透明度：</span>
-      <el-slider
-        class="slider"
-        :max="90"
-        v-model="opacityValue"
-        @change="changeOpacityValue"
-        :format-tooltip="formatTooltip"
-      ></el-slider>
-      <!-- <input v-model="containerWidth" type="number" />
-      <input v-model="containerHeight" type="number" /> -->
     </div>
 
     <div class="input-row">
@@ -406,14 +325,6 @@
         @click="isEdit = !isEdit"
       />
       <input class="btn" type="button" value="设置" @click="option" />
-      <input class="btn" type="button" value="日志" @click="changelog" />
-      <input
-        class="btn primary"
-        type="button"
-        title="φ(>ω<*)"
-        value="打赏"
-        @click="reward"
-      />
     </div>
     <div class="input-row" v-if="showCost || showGains">
       <input
@@ -472,22 +383,13 @@
       :darkMode="darkMode"
       ref="fundDetail"
     ></fund-detail>
-    <reward @close="rewardShadow = false" ref="reward"></reward>
-    <change-log
-      @close="closeChangelog"
-      :darkMode="darkMode"
-      ref="changelog"
-      :top="30"
-    ></change-log>
   </div>
 </template>
 
 <script>
 const { version } = require("../../package.json");
-import reward from "../common/reward";
 import indDetail from "../common/indDetail";
 import fundDetail from "../common/fundDetail";
-import changeLog from "../common/changeLog";
 import market from "../common/market";
 //防抖
 let timeout = null;
@@ -498,16 +400,14 @@ function debounce(fn, wait = 700) {
 
 export default {
   components: {
-    reward,
     fundDetail,
     indDetail,
-    changeLog,
     market,
   },
   data() {
     return {
       isEdit: false,
-      fundcode: "",
+      fundcode: [], // Fixed: Initialized as array for multiple select
       isAdd: false,
       indFundData: [],
       isLiveUpdate: false,
@@ -604,13 +504,7 @@ export default {
       loadingInd: false,
       loadingList: true,
       isGetStorage: false,
-      zoom: {
-        zoom: 1,
-      },
-      grayscale: {},
-      grayscaleValue: 0,
-      opacity: {},
-      opacityValue: 0,
+      // Removed grayscale and opacity related data properties
       isRefresh: false,
       marketShadow: false,
     };
@@ -733,22 +627,7 @@ export default {
     formatTooltip(val) {
       return val + "%";
     },
-    changeGrayscaleValue(val) {
-      this.grayscale = {
-        filter: "grayscale(" + val / 100 + ")",
-      };
-      chrome.storage.sync.set({
-        grayscaleValue: this.grayscaleValue,
-      });
-    },
-    changeOpacityValue(val) {
-      this.opacity = {
-        opacity: 1 - val / 100,
-      };
-      chrome.storage.sync.set({
-        opacityValue: this.opacityValue,
-      });
-    },
+    // Removed changeGrayscaleValue and changeOpacityValue
     init() {
       chrome.storage.sync.get(
         [
@@ -769,8 +648,7 @@ export default {
           "showBadge",
           "BadgeContent",
           "userId",
-          "grayscaleValue",
-          "opacityValue",
+          // Removed grayscaleValue and opacityValue from storage get
           "sortTypeObj",
         ],
         (res) => {
@@ -810,20 +688,14 @@ export default {
           this.showGSZ = res.showGSZ ? res.showGSZ : false;
           this.BadgeContent = res.BadgeContent ? res.BadgeContent : 1;
           this.showBadge = res.showBadge ? res.showBadge : 1;
-          this.grayscaleValue = res.grayscaleValue ? res.grayscaleValue : 0;
-          this.opacityValue = res.opacityValue ? res.opacityValue : 0;
+          // Removed grayscaleValue and opacityValue init
           this.sortTypeObj = res.sortTypeObj ? res.sortTypeObj : {};
 
           if (this.seciList.length > 0) {
             this.loadingInd = true;
           }
 
-          this.grayscale = {
-            filter: "grayscale(" + this.grayscaleValue / 100 + ")",
-          };
-          this.opacity = {
-            opacity: 1 - this.opacityValue / 100,
-          };
+          // Removed style application for grayscale and opacity
 
           this.isGetStorage = true;
           this.getIndFundData();
@@ -832,7 +704,7 @@ export default {
 
           let ver = res.version ? res.version : "1.0.0";
           if (ver != this.localVersion) {
-            this.changelog();
+            // Log feature removed
           }
         }
       );
@@ -867,6 +739,7 @@ export default {
       clearInterval(this.myVar);
       clearInterval(this.myVar1);
       chrome.runtime.sendMessage({ type: "DuringDate" }, (response) => {
+        if (!response) return; // Prevent error if message fails
         this.isDuringDate = response.farewell;
         if (this.isLiveUpdate && this.isDuringDate) {
           if (!isFirst) {
@@ -917,20 +790,6 @@ export default {
 
     option() {
       chrome.tabs.create({ url: "/options/options.html" });
-    },
-    reward() {
-      this.rewardShadow = true;
-      this.$refs.reward.init();
-    },
-    changelog() {
-      this.changelogShadow = true;
-      this.$refs.changelog.init();
-    },
-    closeChangelog() {
-      this.changelogShadow = false;
-      chrome.storage.sync.set({
-        version: this.localVersion,
-      });
     },
     sortList(type) {
       for (const key in this.sortType) {
@@ -1038,6 +897,10 @@ export default {
           let data = res.data.Datas;
           this.dataList = [];
           let dataList = [];
+          
+          if (!data) {
+             return;
+          }
 
           data.forEach((val) => {
             let data = {
@@ -1099,7 +962,9 @@ export default {
             this.dataList = dataList;
           }
         })
-        .catch((error) => {});
+        .catch((error) => {
+          console.error("getData error:", error); // Added error logging
+        });
     },
     changeNum(item, ind) {
       debounce(() => {
@@ -1727,15 +1592,15 @@ tbody tr:hover {
     border: 1px solid rgba($color: #409eff, $alpha: 0.6);
     background-color: rgba($color: #409eff, $alpha: 0.6);
   }
-  /deep/ .el-input__inner {
+  ::v-deep .el-input__inner {
     background-color: rgba($color: #ffffff, $alpha: 0.16);
     color: rgba($color: #ffffff, $alpha: 0.6);
   }
-  /deep/ .el-select__input {
+  ::v-deep .el-select__input {
     color: rgba($color: #ffffff, $alpha: 0.6);
   }
 
-  /deep/ tbody tr:hover {
+  ::v-deep tbody tr:hover {
     background-color: rgba($color: #ffffff, $alpha: 0.12);
   }
 
@@ -1773,16 +1638,16 @@ tbody tr:hover {
     color: rgba($color: #ffffff, $alpha: 0.38);
   }
 
-  /deep/ .el-select .el-input.is-focus .el-input__inner {
+  ::v-deep .el-select .el-input.is-focus .el-input__inner {
     border-color: rgba($color: #409eff, $alpha: 0.6);
   }
 
-  /deep/ .el-select .el-tag {
+  ::v-deep .el-select .el-tag {
     background-color: rgba($color: #ffffff, $alpha: 0.14);
     color: rgba($color: #ffffff, $alpha: 0.6);
   }
 
-  /deep/ .el-select-dropdown {
+  ::v-deep .el-select-dropdown {
     background-color: #383838;
     border: 1px solid rgba($color: #ffffff, $alpha: 0.38);
     .popper__arrow::after {
@@ -1808,14 +1673,14 @@ tbody tr:hover {
     }
   }
 
-  /deep/ .el-switch__label.is-active {
+  ::v-deep .el-switch__label.is-active {
     color: rgba($color: #409eff, $alpha: 0.87);
   }
-  /deep/ .el-switch__label {
+  ::v-deep .el-switch__label {
     color: rgba($color: #ffffff, $alpha: 0.6);
   }
 
-  /deep/ .hasReplace-tip {
+  ::v-deep .hasReplace-tip {
     color: rgba($color: #ffffff, $alpha: 0.6);
     border: 1px solid rgba($color: #409eff, $alpha: 0.6);
     background-color: rgba($color: #409eff, $alpha: 0.6);

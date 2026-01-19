@@ -1,4 +1,4 @@
-import axios from "axios";
+// Service Worker for Manifest V3
 
 var Interval;
 var holiday;
@@ -21,7 +21,7 @@ var getGuid = () => {
 }
 var getHoliday = () => {
   let url = "http://x2rr.github.io/funds/holiday.json";
-  return axios.get(url);
+  return fetch(url).then(response => response.json());
 };
 var checkHoliday = date => {
   var nowMonth = date.getMonth() + 1;
@@ -36,6 +36,7 @@ var checkHoliday = date => {
 
   let check = false;
   var nowDate = nowMonth + "-" + strDate;
+  if (!holiday || !holiday.data) return false;
   let holidayList = holiday.data;
   for (const year in holidayList) {
     if (holidayList.hasOwnProperty(year)) {
@@ -135,22 +136,24 @@ var setBadge = (fundcode, Realtime, type) => {
       fundcode +
       "&_=" +
       new Date().getTime();
-    axios.get(url).then((res) => {
-      let data = res.data.data.diff;
-      let text = data[0].f3.toString();
-      let num = data[0].f3;
-      chrome.browserAction.setBadgeText({
-        text: text
-      });
-      let color = Realtime ?
-        num >= 0 ?
-        "#F56C6C" :
-        "#4eb61b" :
-        "#4285f4";
-      chrome.browserAction.setBadgeBackgroundColor({
-        color: color
-      });
-    });
+    fetch(url).then(response => response.json()).then((res) => {
+      let data = res.data.diff;
+      if (data && data.length > 0) {
+        let text = data[0].f3.toString();
+        let num = data[0].f3;
+        chrome.action.setBadgeText({
+          text: text
+        });
+        let color = Realtime ?
+          num >= 0 ?
+          "#F56C6C" :
+          "#4eb61b" :
+          "#4285f4";
+        chrome.action.setBadgeBackgroundColor({
+          color: color
+        });
+      }
+    }).catch(err => console.error(err));
   } else {
     if (type == 1) {
       fundStr = fundcode;
@@ -161,15 +164,16 @@ var setBadge = (fundcode, Realtime, type) => {
     let url =
       "https://fundmobapi.eastmoney.com/FundMNewApi/FundMNFInfo?pageIndex=1&pageSize=200&plat=Android&appType=ttjj&product=EFund&Version=1&deviceid=" + userId + "&Fcodes=" +
       fundStr;
-    axios
-      .get(url)
+    fetch(url)
+      .then(response => response.json())
       .then((res) => {
         let allAmount = 0;
         let allGains = 0;
         let textStr = null;
         let sumNum = 0;
         if (type == 1) {
-          let val = res.data.Datas[0];
+          if (!res.Datas || res.Datas.length === 0) return;
+          let val = res.Datas[0];
           let data = {
             fundcode: val.FCODE,
             name: val.SHORTNAME,
@@ -220,25 +224,27 @@ var setBadge = (fundcode, Realtime, type) => {
           }
 
         } else {
-          res.data.Datas.forEach((val) => {
+           if (!res.Datas) return;
+          res.Datas.forEach((val) => {
             let slt = fundListM.filter(
               (item) => item.code == val.FCODE
             );
-            let num = slt[0].num ? slt[0].num : 0;
-            let NAV = isNaN(val.NAV) ? null : val.NAV;
-            allAmount += NAV * num;
-            var sum = 0;
-            if (val.PDATE != "--" && val.PDATE == val.GZTIME.substr(0, 10)) {
-              let NAVCHGRT = isNaN(val.NAVCHGRT) ? 0 : val.NAVCHGRT;
-              sum = (NAV - NAV / (1 + NAVCHGRT * 0.01)) * num
-            } else {
-              let gsz = isNaN(val.GSZ) ? null : val.GSZ
-              if (gsz && NAV) {
-                sum = (gsz - NAV) * num
-              }
+            if (slt.length > 0) {
+                let num = slt[0].num ? slt[0].num : 0;
+                let NAV = isNaN(val.NAV) ? null : val.NAV;
+                allAmount += NAV * num;
+                var sum = 0;
+                if (val.PDATE != "--" && val.PDATE == val.GZTIME.substr(0, 10)) {
+                  let NAVCHGRT = isNaN(val.NAVCHGRT) ? 0 : val.NAVCHGRT;
+                  sum = (NAV - NAV / (1 + NAVCHGRT * 0.01)) * num
+                } else {
+                  let gsz = isNaN(val.GSZ) ? null : val.GSZ
+                  if (gsz && NAV) {
+                    sum = (gsz - NAV) * num
+                  }
+                }
+                allGains += sum;
             }
-            allGains += sum;
-
           });
           if (BadgeType == 1) {
             if (allAmount == 0 || allGains == 0) {
@@ -256,21 +262,21 @@ var setBadge = (fundcode, Realtime, type) => {
         }
 
 
-        chrome.browserAction.setBadgeText({
-          text: textStr
+        chrome.action.setBadgeText({
+          text: textStr ? textStr.toString() : ""
         });
         let color = Realtime ?
           sumNum >= 0 ?
           "#F56C6C" :
           "#4eb61b" :
           "#4285f4";
-        chrome.browserAction.setBadgeBackgroundColor({
+        chrome.action.setBadgeBackgroundColor({
           color: color
         });
 
       })
       .catch((error) => {
-
+        console.error(error);
       });
   }
 
@@ -282,7 +288,7 @@ var setBadge = (fundcode, Realtime, type) => {
 var startInterval = (RealtimeFundcode, type = 1) => {
   endInterval(Interval);
   let Realtime = isDuringDate();
-  RealtimeFundcode = RealtimeFundcode;
+  // RealtimeFundcode = RealtimeFundcode; // redundant
   setBadge(RealtimeFundcode, Realtime, type);
   let time = 2 * 60 * 1000;
   if (type == 3) {
@@ -292,7 +298,7 @@ var startInterval = (RealtimeFundcode, type = 1) => {
     if (isDuringDate()) {
       setBadge(RealtimeFundcode, true, type);
     } else {
-      chrome.browserAction.setBadgeBackgroundColor({
+      chrome.action.setBadgeBackgroundColor({
         color: "#4285f4"
       });
     }
@@ -301,7 +307,7 @@ var startInterval = (RealtimeFundcode, type = 1) => {
 
 var endInterval = () => {
   clearInterval(Interval);
-  chrome.browserAction.setBadgeText({
+  chrome.action.setBadgeText({
     text: ""
   });
 };
@@ -351,11 +357,25 @@ var getData = () => {
       runStart(RealtimeFundcode, RealtimeIndcode);
     } else {
       getHoliday().then(res => {
+         // res is already json from my modified getHoliday
+         let data = res.data ? res.data : res; // adapt if response structure varies
+         // assuming res is the full response object from original axios. data is res.data.
+         // fetch returns json directly. Let's check getHoliday again.
+         // getHoliday returns fetch(..).then(res => res.json()). So 'res' here IS the body.
+         // but holiday.json content structure: { "202x": ... } or { data: ... } ?
+         // Looking at previous code: holiday = res.data. So the json has a 'data' property? or axios wrapped it?
+         // Axios wraps response in { data: ..., status: ... }.
+         // Fetch .json() returns the actual JSON content.
+         // So if the JSON file itself has no "data" field wrapping the content, we just use res.
+         // Wait, original code: holiday = res.data.
+         // If holiday.json is just the object, then axios puts it in .data.
+         // So with fetch, 'res' IS what used to be 'res.data'.
+         // So holiday = res.
         chrome.storage.sync.set({
-            holiday: res.data
+            holiday: res
           },
           () => {
-            holiday = res.data;
+            holiday = res;
             runStart(RealtimeFundcode, RealtimeIndcode);
           }
         );
@@ -375,10 +395,16 @@ var getData = () => {
 
 getData();
 
-chrome.contextMenus.create({
-  title: "以独立窗口模式打开",
-  contexts: ["browser_action"],
-  onclick: () => {
+chrome.runtime.onInstalled.addListener(() => {
+  chrome.contextMenus.create({
+    id: "open_popup",
+    title: "以独立窗口模式打开",
+    contexts: ["action"]
+  });
+});
+
+chrome.contextMenus.onClicked.addListener((info, tab) => {
+  if (info.menuItemId === "open_popup") {
     chrome.windows.create({
       url: chrome.runtime.getURL("popup/popup.html"),
       width: 700,
@@ -389,9 +415,9 @@ chrome.contextMenus.create({
       chrome.windows.update(e.id, {
         focused: true
       })
-    }))
+    }));
   }
-})
+});
 
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
   if (request.type == "DuringDate") {
@@ -410,27 +436,30 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
     let allAmount = 0;
     let allGains = 0;
     let sumNum = 0;
-    request.data.forEach((val) => {
-      let slt = fundListM.filter(
-        (item) => item.code == val.FCODE
-      );
-      let num = slt[0].num ? slt[0].num : 0;
-      let NAV = isNaN(val.NAV) ? null : val.NAV;
-      allAmount += NAV * num;
-      var sum = 0;
-      if (val.PDATE != "--" && val.PDATE == val.GZTIME.substr(0, 10)) {
-        let NAVCHGRT = isNaN(val.NAVCHGRT) ? 0 : val.NAVCHGRT;
-        sum = (NAV - NAV / (1 + NAVCHGRT * 0.01)) * num
-      } else {
-        let gsz = isNaN(val.GSZ) ? null : val.GSZ;
-        if (gsz != null && NAV != null) {
-          sum = (gsz - NAV) * num;
-        }
+    if (request.data && Array.isArray(request.data)) {
+        request.data.forEach((val) => {
+          let slt = fundListM.filter(
+            (item) => item.code == val.FCODE
+          );
+          if (slt.length > 0) {
+              let num = slt[0].num ? slt[0].num : 0;
+              let NAV = isNaN(val.NAV) ? null : val.NAV;
+              allAmount += NAV * num;
+              var sum = 0;
+              if (val.PDATE != "--" && val.PDATE == val.GZTIME.substr(0, 10)) {
+                let NAVCHGRT = isNaN(val.NAVCHGRT) ? 0 : val.NAVCHGRT;
+                sum = (NAV - NAV / (1 + NAVCHGRT * 0.01)) * num
+              } else {
+                let gsz = isNaN(val.GSZ) ? null : val.GSZ;
+                if (gsz != null && NAV != null) {
+                  sum = (gsz - NAV) * num;
+                }
+              }
+              allGains += sum;
+          }
+        });
+    }
 
-      }
-      allGains += sum;
-
-    });
     let textStr = null;
     if (BadgeType == 1) {
       if (allAmount == 0 || allGains == 0) {
@@ -446,15 +475,15 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
       sumNum = allGains;
     }
 
-    chrome.browserAction.setBadgeText({
-      text: textStr
+    chrome.action.setBadgeText({
+      text: textStr ? textStr.toString() : ""
     });
     let color = isDuringDate() ?
       sumNum >= 0 ?
       "#F56C6C" :
       "#4eb61b" :
       "#4285f4";
-    chrome.browserAction.setBadgeBackgroundColor({
+    chrome.action.setBadgeBackgroundColor({
       color: color
     });
   }
@@ -488,16 +517,19 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
       num = request.data.gains;
       textstr = formatNum(request.data.gains);
     }
-    chrome.browserAction.setBadgeText({
-      text: textstr
+    chrome.action.setBadgeText({
+      text: textstr ? textstr.toString() : ""
     });
     let color = isDuringDate() ?
       num >= 0 ?
       "#F56C6C" :
       "#4eb61b" :
       "#4285f4";
-    chrome.browserAction.setBadgeBackgroundColor({
+    chrome.action.setBadgeBackgroundColor({
       color: color
     });
   }
+  // Return true to indicate we wish to send a response asynchronously (for sendResponse)
+  // Although in "DuringDate" it is synchronous, it's good practice if async logic exists.
+  // But here sendResponse is only used in DuringDate which is sync.
 });

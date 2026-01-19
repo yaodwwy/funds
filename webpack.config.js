@@ -12,6 +12,7 @@ const {
 
 const config = {
   mode: process.env.NODE_ENV,
+  devtool: 'cheap-module-source-map',
   context: __dirname + '/src',
   entry: {
     'background': './background.js',
@@ -98,12 +99,6 @@ const config = {
         transform: (content) => {
           const jsonContent = JSON.parse(content);
           jsonContent.version = version;
-
-          if (config.mode === 'development') {
-            //   jsonContent['content_security_policy'] = "script-src 'self' 'unsafe-eval'; object-src 'self'";
-            //   jsonContent['content_security_policy'] ="script-src 'self' https://jic.talkingdata.com; object-src 'self'";
-            jsonContent['content_security_policy'] = "script-src 'self' 'unsafe-eval' https://jic.talkingdata.com; object-src 'self'";
-          }
 
           return JSON.stringify(jsonContent, null, 2);
         },
