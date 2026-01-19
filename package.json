@@ -1,8 +1,8 @@
 {
   "name": "fund-ai-assistant",
-  "version": "0.0.3",
+  "version": "0.0.5",
   "description": "AI诊断自选基金，实时查看您关注的基金，助您快速获取实时数据，提供量化决策建议。",
-  "author": "LiuRabt",
+  "author": "adbyte",
   "license": "GPL-3.0",
   "engines": {
     "node": ">=10"

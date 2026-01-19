@@ -250,7 +250,7 @@
                 {{
                   el.hasReplace ? el.gztime.substr(5, 5) : el.gztime.substr(10)
                 }}
-                
+
               </td>
               <th
                 style="text-align:center"
@@ -408,6 +408,7 @@ export default {
     return {
       isEdit: false,
       fundcode: [], // Fixed: Initialized as array for multiple select
+      nameCache: {}, // Added nameCache
       isAdd: false,
       indFundData: [],
       isLiveUpdate: false,
@@ -770,6 +771,9 @@ export default {
           "&_=" +
           new Date().getTime();
         this.$axios.get(url).then((res) => {
+          res.data.Datas.forEach((val) => {
+            this.nameCache[val.CODE] = val.NAME;
+          });
           this.searchOptions = res.data.Datas.filter((val) => {
             let hasCode = this.fundListM.some((currentValue, index, array) => {
               return currentValue.code == val.CODE;
@@ -884,6 +888,12 @@ export default {
       });
     },
     getData(type) {
+      if (this.fundListM.length === 0) {
+        this.loadingList = false;
+        this.dataList = [];
+        this.dataListDft = [];
+        return;
+      }
       let fundlist = this.fundListM.map((val) => val.code).join(",");
       let url =
         "https://fundmobapi.eastmoney.com/FundMNewApi/FundMNFInfo?pageIndex=1&pageSize=200&plat=Android&appType=ttjj&product=EFund&Version=1&deviceid=" +
@@ -894,58 +904,81 @@ export default {
         .get(url)
         .then((res) => {
           this.loadingList = false;
-          let data = res.data.Datas;
+          let datas = res.data.Datas || [];
           this.dataList = [];
           let dataList = [];
-          
-          if (!data) {
-             return;
-          }
 
-          data.forEach((val) => {
-            let data = {
-              fundcode: val.FCODE,
-              name: val.SHORTNAME,
-              jzrq: val.PDATE,
-              dwjz: isNaN(val.NAV) ? null : val.NAV,
-              gsz: isNaN(val.GSZ) ? null : val.GSZ,
-              gszzl: isNaN(val.GSZZL) ? 0 : val.GSZZL,
-              gztime: val.GZTIME,
-            };
-            if (val.PDATE != "--" && val.PDATE == val.GZTIME.substr(0, 10)) {
-              data.gsz = val.NAV;
-              data.gszzl = isNaN(val.NAVCHGRT) ? 0 : val.NAVCHGRT;
-              data.hasReplace = true;
+          let apiDataMap = {};
+          datas.forEach((val) => {
+            apiDataMap[val.FCODE] = val;
+          });
+
+          this.fundListM.forEach((localFund) => {
+            let val = apiDataMap[localFund.code];
+            let dataItem = {};
+
+            if (val) {
+              dataItem = {
+                fundcode: val.FCODE,
+                name: val.SHORTNAME,
+                jzrq: val.PDATE,
+                dwjz: isNaN(val.NAV) ? null : val.NAV,
+                gsz: isNaN(val.GSZ) ? null : val.GSZ,
+                gszzl: isNaN(val.GSZZL) ? 0 : val.GSZZL,
+                gztime: val.GZTIME,
+              };
+              if (val.PDATE != "--" && val.PDATE == val.GZTIME.substr(0, 10)) {
+                dataItem.gsz = val.NAV;
+                dataItem.gszzl = isNaN(val.NAVCHGRT) ? 0 : val.NAVCHGRT;
+                dataItem.hasReplace = true;
+              }
+            } else {
+              dataItem = {
+                fundcode: localFund.code,
+                name: localFund.name || "暂无数据",
+                jzrq: "--",
+                dwjz: null,
+                gsz: null,
+                gszzl: 0,
+                gztime: "--",
+                hasReplace: false,
+              };
             }
 
-            let slt = this.fundListM.filter(
-              (item) => item.code == data.fundcode
-            );
-            data.num = slt[0].num;
-            data.cost = slt[0].cost;
-            data.amount = this.calculateMoney(data);
-            data.gains = this.calculate(data, data.hasReplace);
-            data.costGains = this.calculateCost(data);
-            data.costGainsRate = this.calculateCostRate(data);
+            dataItem.num = localFund.num;
+            dataItem.cost = localFund.cost;
 
-            if (data.fundcode == this.RealtimeFundcode) {
+            if (dataItem.dwjz !== null && dataItem.dwjz !== undefined) {
+                dataItem.amount = this.calculateMoney(dataItem);
+                dataItem.gains = this.calculate(dataItem, dataItem.hasReplace);
+                dataItem.costGains = this.calculateCost(dataItem);
+                dataItem.costGainsRate = this.calculateCostRate(dataItem);
+            } else {
+                dataItem.amount = 0;
+                dataItem.gains = 0;
+                dataItem.costGains = 0;
+                dataItem.costGainsRate = 0;
+            }
+
+            if (dataItem.fundcode == this.RealtimeFundcode) {
               if (this.showBadge == 1) {
                 if (this.BadgeContent == 1) {
                   chrome.runtime.sendMessage({
                     type: "refreshBadge",
-                    data: data,
+                    data: dataItem,
                   });
                 }
               }
             }
 
-            dataList.push(data);
+            dataList.push(dataItem);
           });
+
           if (this.showBadge == 1) {
             if (this.BadgeContent == 2) {
               chrome.runtime.sendMessage({
                 type: "refreshBadgeAllGains",
-                data: data,
+                data: datas,
               });
             }
           }
@@ -963,7 +996,7 @@ export default {
           }
         })
         .catch((error) => {
-          console.error("getData error:", error); // Added error logging
+          console.error("getData error:", error);
         });
     },
     changeNum(item, ind) {
@@ -1038,11 +1071,16 @@ export default {
     },
     save() {
       this.fundcode.forEach((code) => {
-        let val = {
-          code: code,
-          num: 0,
-        };
-        this.fundListM.push(val);
+        let exists = this.fundListM.some(item => item.code == code);
+        if (!exists) {
+          let name = this.nameCache[code];
+          let val = {
+            code: code,
+            name: name,
+            num: 0,
+          };
+          this.fundListM.push(val);
+        }
       });
 
       chrome.storage.sync.set(
