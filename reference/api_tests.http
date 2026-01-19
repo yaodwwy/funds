@@ -1,0 +1,48 @@
+### 1. Fund Information (List)
+GET https://fundmobapi.eastmoney.com/FundMNewApi/FundMNFInfo?pageIndex={{pageIndex}}&pageSize={{pageSize}}&plat=Android&appType=ttjj&product=EFund&Version=1&deviceid={{deviceid}}&Fcodes={{fundCode}},001186
+
+### 2. Holiday Information
+GET https://x2rr.github.io/funds/holiday.json
+
+### 3. Fund Search
+# Search key: 易方达 (URL encoded)
+GET https://fundsuggest.eastmoney.com/FundSearch/api/FundSearchAPI.ashx?m=9&key=%E6%98%93%E6%96%B9%E8%BE%BE&_={{timestamp}}
+
+### 4. Securities/Indices Information
+GET https://push2.eastmoney.com/api/qt/ulist.np/get?fltt=2&fields=f2,f3,f4,f12,f13,f14&secids={{secIds}}&_={{timestamp}}
+
+### 5. Fund Position Details
+GET https://fundmobapi.eastmoney.com/FundMNewApi/FundMNInverstPosition?FCODE={{fundCode}}&deviceid=Wap&plat=Wap&product=EFund&version=2.0.0&Uid=&_={{timestamp}}
+
+### 6. Market Flows (Real-time Minute)
+GET http://push2.eastmoney.com/api/qt/kamt.rtmin/get?fields1=f1,f2,f3,f4&fields2=f51,f52,f53,f54,f55,f56&ut=&v={{timestamp}}
+
+### 7. Market Flow Kline
+GET http://push2.eastmoney.com/api/qt/stock/fflow/kline/get?lmt=0&klt=1&secid={{indexCode1}}&secid2={{indexCode2}}&fields1=f1,f2,f3,f7&fields2=f51,f52,f53,f54,f55,f56,f57,f58,f59,f60,f61,f62,f63&_={{timestamp}}
+
+### 8. Market Bar Chart Data
+GET http://push2.eastmoney.com/api/qt/clist/get?pn=1&pz=500&po=1&np=1&fields=f12,f13,f14,f62&fid=f62&fs=m:90+t:2&_={{timestamp}}
+
+### 9. Fund Manager List
+GET https://fundmobapi.eastmoney.com/FundMApi/FundManagerList.ashx?FCODE={{fundCode}}&deviceid=Wap&plat=Wap&product=EFund&version=2.0.0&Uid=&_={{timestamp}}
+
+### 10. Fund Manager Detail
+GET https://fundmobapi.eastmoney.com/FundMApi/FundMangerDetail.ashx?FCODE={{fundCode}}&deviceid=Wap&plat=Wap&product=EFund&version=2.0.0&Uid=&_={{timestamp}}
+
+### 11. Stock Trends
+GET https://push2.eastmoney.com/api/qt/stock/trends2/get?secid={{indexCode1}}&fields1=f1,f2,f3,f4,f5,f6,f7,f8,f9,f10,f11,f12,f13&fields2=f51,f53,f56,f58&iscr=0&iscca=0&ndays=1&forcect=1
+
+### 12. Fund Base Information
+GET https://fundmobapi.eastmoney.com/FundMApi/FundBaseTypeInformation.ashx?FCODE={{fundCode}}&deviceid=Wap&plat=Wap&product=EFund&version=2.0.0&Uid=&_={{timestamp}}
+
+### 13. Fund Yield Diagram (Yearly)
+GET https://fundmobapi.eastmoney.com/FundMApi/FundYieldDiagramNew.ashx?FCODE={{fundCode}}&RANGE=y&deviceid=Wap&plat=Wap&product=EFund&version=2.0.0&_={{timestamp}}
+
+### 14. Fund Net Diagram (Yearly)
+GET https://fundmobapi.eastmoney.com/FundMApi/FundNetDiagram.ashx?FCODE={{fundCode}}&RANGE=y&deviceid=Wap&plat=Wap&product=EFund&version=2.0.0&_={{timestamp}}
+
+### 15. Fund Valuation Detail (Intraday)
+GET https://fundmobapi.eastmoney.com/FundMApi/FundVarietieValuationDetail.ashx?FCODE={{fundCode}}&deviceid=Wap&plat=Wap&product=EFund&version=2.0.0&_={{timestamp}}
+
+### 16. Change Log
+GET https://x2rr.github.io/funds/src/common/changeLog.json

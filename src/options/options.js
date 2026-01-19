@@ -13,7 +13,12 @@ import {
   Select,
   Option,
   Table,
-  TableColumn
+  TableColumn,
+  Tabs,
+  TabPane,
+  Icon,
+  Checkbox,
+  MessageBox
 } from 'element-ui';
 
 import VueClipboard from "vue-clipboard2";
@@ -31,9 +36,14 @@ Vue.use(Select)
 Vue.use(Option)
 Vue.use(Table)
 Vue.use(TableColumn)
+Vue.use(Tabs)
+Vue.use(TabPane)
+Vue.use(Icon)
+Vue.use(Checkbox)
 
 Vue.prototype.$axios = axios;
 Vue.prototype.$message = Message;
+Vue.prototype.$confirm = MessageBox.confirm;
 Vue.prototype.$ELEMENT = { size: 'mini' };
 
 Vue.use(Loading.directive);

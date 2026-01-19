@@ -17,112 +17,22 @@
       >
         <div
           v-for="(el, index) in indFundData"
-          :draggable="isEdit"
           class="tab-col indFund"
-          :class="drag"
           :key="el.f12"
-          @click.stop="!isEdit && indDetail(el)"
-          @dragstart="handleDragStart($event, el)"
-          @dragover.prevent="handleDragOver($event, el)"
-          @dragenter="handleDragEnter($event, el, index)"
-          @dragend="handleDragEnd($event, el)"
+          @click.stop="indDetail(el)"
         >
           <h5>
             {{ el.f14 }}
-            <span
-              v-if="isEdit"
-              @click="dltIndFund(index)"
-              class="dltBtn edit red btn"
-              >✖</span
-            >
           </h5>
           <p :class="el.f3 >= 0 ? 'up' : 'down'">
-            {{ el.f2
-            }}<input
-              v-if="isEdit && BadgeContent == 3"
-              @click="sltInd(el)"
-              :class="el.f13 + '.' + el.f12 == RealtimeIndcode ? 'slt' : ''"
-              class="btn edit"
-              style="margin-left:5px"
-              value="✔"
-              type="button"
-            />
+            {{ el.f2 }}
           </p>
           <p :class="el.f3 >= 0 ? 'up' : 'down'">
             {{ el.f4 }}&nbsp;&nbsp;{{ el.f3 }}%
           </p>
         </div>
-        <div v-if="isEdit && indFundData.length < 4" class="tab-col">
-          <div
-            v-if="!showAddSeciInput"
-            class="addSeci"
-            @click="() => (showAddSeciInput = true)"
-          >
-            添加
-          </div>
-          <div v-else>
-            <div style="padding-top:2px">
-              <el-select
-                size="mini"
-                :popper-append-to-body="false"
-                v-model="sltSeci"
-                style="width:110px"
-                placeholder="请选择"
-              >
-                <el-option
-                  v-for="item in userSeciList"
-                  :key="item.value"
-                  :label="item.label"
-                  :value="item.value"
-                ></el-option>
-              </el-select>
-            </div>
-            <div style="margin-top:4px">
-              <input
-                class="btn"
-                type="button"
-                value="取消"
-                @click="() => (showAddSeciInput = false)"
-              />
-              <input class="btn" type="button" value="确定" @click="saveSeci" />
-            </div>
-          </div>
-        </div>
       </div>
-      <div v-if="isEdit" class="input-row">
-        <span>添加新基金:</span>
-        <el-select
-          v-model="fundcode"
-          multiple
-          filterable
-          :popper-append-to-body="false"
-          remote
-          size="mini"
-          reserve-keyword
-          @visible-change="selectChange"
-          placeholder="请输入基金编码，支持按名称或编码搜索"
-          :remote-method="remoteMethod"
-          :loading="loading"
-          style="width:300px"
-        >
-          <el-option
-            v-for="item in searchOptions"
-            :key="item.value"
-            :label="item.label"
-            :value="item.value"
-          >
-            <span style="float: left">{{ item.label }}</span>
-            <span
-              style="float: right; color: #8492a6; font-size: 13px;margim-right:20px;padding-right:15px"
-              >{{ item.value }}</span
-            >
-          </el-option>
-        </el-select>
-        <input @click="save" class="btn" type="button" value="确定" />
-      </div>
-      <p v-if="isEdit" class="tips center">
-        部分新发基金或QDII基金可以搜索到，但可能无法获取估值情况
-      </p>
+     
       <div
         v-if="isGetStorage"
         v-loading="loadingList"
@@ -130,20 +40,12 @@
           darkMode ? 'rgba(0, 0, 0, 0.9)' : 'rgba(255, 255, 255, 0.9)'
         "
         class="table-row"
-        style="min-height:160px"
       >
-        <table :class="tableHeight">
+        <table>
           <thead>
             <tr>
               <th class="align-left">基金名称（{{ dataList.length }}）</th>
-              <th v-if="isEdit">基金代码</th>
-              <th v-if="showGSZ && !isEdit">估算净值</th>
-              <th
-                style="text-align:center"
-                v-if="isEdit && (showCostRate || showCost)"
-              >
-                成本价
-              </th>
+              <th v-if="showGSZ">估算净值</th>
               <th @click="sortList('amount')" v-if="showAmount" class="pointer">
                 持有额
                 <span :class="sortType.amount" class="down-arrow"></span>
@@ -172,51 +74,22 @@
                 估算收益
                 <span :class="sortType.gains" class="down-arrow"></span>
               </th>
-              <th v-if="!isEdit">更新时间</th>
-              <th
-                style="text-align:center"
-                v-if="
-                  isEdit &&
-                    (showAmount || showGains || showCost || showCostRate)
-                "
-              >
-                持有份额
-              </th>
-              <th v-if="isEdit && BadgeContent == 1">特别关注</th>
-              <th v-if="isEdit">删除</th>
+              <th>更新时间</th>
             </tr>
           </thead>
           <tbody>
             <tr
               v-for="(el, index) in dataList"
               :key="el.fundcode"
-              :draggable="isEdit"
-              :class="drag"
-              @dragstart="handleDragStart($event, el)"
-              @dragover.prevent="handleDragOver($event, el)"
-              @dragenter="handleDragEnter($event, el, index)"
-              @dragend="handleDragEnd($event, el)"
             >
               <td
-                :class="
-                  isEdit ? 'fundName-noclick align-left' : 'fundName align-left'
-                "
+                class="fundName align-left"
                 :title="el.name"
-                @click.stop="!isEdit && fundDetail(el)"
+                @click.stop="fundDetail(el)"
               >
                 <span class="hasReplace-tip" v-if="el.hasReplace">✔</span>{{ el.name }}
               </td>
-              <td v-if="isEdit">{{ el.fundcode }}</td>
-              <td v-if="showGSZ && !isEdit">{{ el.gsz }}</td>
-              <td v-if="isEdit && (showCostRate || showCost)">
-                <input
-                  class="btn num"
-                  placeholder="持仓成本价"
-                  v-model="el.cost"
-                  @input="changeCost(el, index)"
-                  type="text"
-                />
-              </td>
+              <td v-if="showGSZ">{{ el.gsz }}</td>
 
               <td v-if="showAmount">
                 {{
@@ -246,63 +119,15 @@
                   })
                 }}
               </td>
-              <td v-if="!isEdit">
+              <td>
                 {{
                   el.hasReplace ? el.gztime.substr(5, 5) : el.gztime.substr(10)
                 }}
-
-              </td>
-              <th
-                style="text-align:center"
-                v-if="
-                  isEdit &&
-                    (showAmount || showGains || showCost || showCostRate)
-                "
-              >
-                <input
-                  class="btn num"
-                  placeholder="输入持有份额"
-                  v-model="el.num"
-                  @input="changeNum(el, index)"
-                  type="text"
-                />
-              </th>
-              <td v-if="isEdit && BadgeContent == 1">
-                <input
-                  @click="slt(el.fundcode)"
-                  :class="el.fundcode == RealtimeFundcode ? 'slt' : ''"
-                  class="btn edit"
-                  value="✔"
-                  type="button"
-                />
-              </td>
-              <td v-if="isEdit">
-                <input
-                  @click="dlt(el.fundcode)"
-                  class="btn red edit"
-                  value="✖"
-                  type="button"
-                />
               </td>
             </tr>
           </tbody>
         </table>
       </div>
-    </div>
-    <p v-if="isEdit" class="tips">
-      特别关注功能介绍：指定一个基金，在程序图标中以角标的形式实时更新，请在设置中选择角标类型与内容。
-    </p>
-
-    <div v-show="isEdit" class="input-row gear-input-row">
-      <el-switch
-        v-model="darkMode"
-        @change="changeDarkMode"
-        active-color="#484848"
-        inactive-color="#13ce66"
-        inactive-text="标准模式"
-        active-text="暗色模式"
-      >
-      </el-switch>
     </div>
 
     <div class="input-row">
@@ -318,12 +143,6 @@
         @click="changeLiveUpdate"
       />
       <input class="btn" v-if="!isDuringDate" type="button" value="休市中" />
-      <input
-        class="btn"
-        type="button"
-        :value="isEdit ? '完成编辑' : '编辑'"
-        @click="isEdit = !isEdit"
-      />
       <input class="btn" type="button" value="设置" @click="option" />
     </div>
     <div class="input-row" v-if="showCost || showGains">
@@ -391,12 +210,6 @@ const { version } = require("../../package.json");
 import indDetail from "../common/indDetail";
 import fundDetail from "../common/fundDetail";
 import market from "../common/market";
-//防抖
-let timeout = null;
-function debounce(fn, wait = 700) {
-  if (timeout !== null) clearTimeout(timeout);
-  timeout = setTimeout(fn, wait);
-}
 
 export default {
   components: {
@@ -406,10 +219,6 @@ export default {
   },
   data() {
     return {
-      isEdit: false,
-      fundcode: [], // Fixed: Initialized as array for multiple select
-      nameCache: {}, // Added nameCache
-      isAdd: false,
       indFundData: [],
       isLiveUpdate: false,
       isDuringDate: false,
@@ -420,7 +229,6 @@ export default {
       myVar: null,
       myVar1: null,
       rewardShadow: false,
-      checked: "wepay",
       showGains: false,
       showAmount: false,
       showCost: false,
@@ -439,61 +247,10 @@ export default {
         name: null,
         value: null,
       },
-      searchOptions: [],
-      value: [],
       list: [],
-      loading: false,
-      dragging: null,
-      showAddSeciInput: false,
       seciList: ["1.000001", "1.000300", "0.399001", "0.399006"],
-      allSeciList: [
-        {
-          value: "1.000001",
-          label: "上证指数",
-        },
-        {
-          value: "1.000300",
-          label: "沪深300",
-        },
-        {
-          value: "0.399001",
-          label: "深证成指",
-        },
-        {
-          value: "1.000688",
-          label: "科创50",
-        },
-        {
-          value: "0.399006",
-          label: "创业板指",
-        },
-        {
-          value: "0.399005",
-          label: "中小板指",
-        },
-        {
-          value: "100.HSI",
-          label: "恒生指数",
-        },
-        {
-          value: "100.DJIA",
-          label: "道琼斯",
-        },
-        {
-          value: "100.NDX",
-          label: "纳斯达克",
-        },
-        {
-          value: "100.SPX",
-          label: "标普500",
-        },
-      ],
-      sltSeci: "",
       darkMode: false,
       normalFontSize: false,
-      diyContainer: false,
-      containerWidth: 790,
-      containerHeight: 590,
       detailShadow: false,
       changelogShadow: false,
       sltFund: {},
@@ -505,7 +262,6 @@ export default {
       loadingInd: false,
       loadingList: true,
       isGetStorage: false,
-      // Removed grayscale and opacity related data properties
       isRefresh: false,
       marketShadow: false,
     };
@@ -562,8 +318,6 @@ export default {
         className += "more-height";
       } else if (this.detailShadow) {
         className += "detail-container";
-      } else if (this.isEdit) {
-        className += "more-width";
       } else {
         let tablist = [
           this.showAmount,
@@ -587,36 +341,8 @@ export default {
         return this.seciList.indexOf(val.value) == -1;
       });
     },
-    tableHeight() {
-      if (this.isEdit) {
-        return "table-more-height";
-      }
-    },
-    drag() {
-      if (this.isEdit) {
-        return "table-drag";
-      } else {
-        return "";
-      }
-    },
   },
-  watch: {
-    //编辑状态停止更新
-    isEdit(val) {
-      if (val) {
-        clearInterval(this.myVar);
-        clearInterval(this.myVar1);
-        this.dataList = [...this.dataListDft];
-        for (const key in this.sortType) {
-          if (this.sortType.hasOwnProperty(key)) {
-            this.sortType[key] = "none";
-          }
-        }
-      } else {
-        this.checkInterval();
-      }
-    },
-  },
+  watch: {},
   methods: {
     refresh() {
       this.init();
@@ -628,7 +354,6 @@ export default {
     formatTooltip(val) {
       return val + "%";
     },
-    // Removed changeGrayscaleValue and changeOpacityValue
     init() {
       chrome.storage.sync.get(
         [
@@ -649,7 +374,6 @@ export default {
           "showBadge",
           "BadgeContent",
           "userId",
-          // Removed grayscaleValue and opacityValue from storage get
           "sortTypeObj",
         ],
         (res) => {
@@ -689,14 +413,11 @@ export default {
           this.showGSZ = res.showGSZ ? res.showGSZ : false;
           this.BadgeContent = res.BadgeContent ? res.BadgeContent : 1;
           this.showBadge = res.showBadge ? res.showBadge : 1;
-          // Removed grayscaleValue and opacityValue init
           this.sortTypeObj = res.sortTypeObj ? res.sortTypeObj : {};
 
           if (this.seciList.length > 0) {
             this.loadingInd = true;
           }
-
-          // Removed style application for grayscale and opacity
 
           this.isGetStorage = true;
           this.getIndFundData();
@@ -720,7 +441,6 @@ export default {
       });
     },
     indDetail(val) {
-      // this.sltIndCode = val.f13 + "." + val.f12;
       this.detailShadow = true;
       this.$refs.indDetail.init(val);
     },
@@ -740,7 +460,7 @@ export default {
       clearInterval(this.myVar);
       clearInterval(this.myVar1);
       chrome.runtime.sendMessage({ type: "DuringDate" }, (response) => {
-        if (!response) return; // Prevent error if message fails
+        if (!response) return;
         this.isDuringDate = response.farewell;
         if (this.isLiveUpdate && this.isDuringDate) {
           if (!isFirst) {
@@ -759,39 +479,6 @@ export default {
         }
       });
     },
-    selectChange() {
-      this.searchOptions = [];
-    },
-    remoteMethod(query) {
-      if (query !== "") {
-        this.loading = true;
-        let url =
-          "https://fundsuggest.eastmoney.com/FundSearch/api/FundSearchAPI.ashx?&m=9&key=" +
-          query +
-          "&_=" +
-          new Date().getTime();
-        this.$axios.get(url).then((res) => {
-          res.data.Datas.forEach((val) => {
-            this.nameCache[val.CODE] = val.NAME;
-          });
-          this.searchOptions = res.data.Datas.filter((val) => {
-            let hasCode = this.fundListM.some((currentValue, index, array) => {
-              return currentValue.code == val.CODE;
-            });
-            return !hasCode;
-          }).map((val) => {
-            return {
-              value: val.CODE,
-              label: val.NAME,
-            };
-          });
-          this.loading = false;
-        });
-      } else {
-        this.searchOptions = [];
-      }
-    },
-
     option() {
       chrome.tabs.create({ url: "/options/options.html" });
     },
@@ -835,12 +522,6 @@ export default {
         }
       };
     },
-
-    changeDarkMode() {
-      chrome.storage.sync.set({
-        darkMode: this.darkMode,
-      });
-    },
     changeLiveUpdate() {
       chrome.storage.sync.set(
         {
@@ -849,29 +530,6 @@ export default {
         () => {
           this.isLiveUpdate = !this.isLiveUpdate;
           this.checkInterval();
-        }
-      );
-    },
-    saveSeci() {
-      this.seciList.push(this.sltSeci);
-      chrome.storage.sync.set(
-        {
-          seciList: this.seciList,
-        },
-        () => {
-          this.sltSeci = "";
-          this.getIndFundData();
-        }
-      );
-    },
-    dltIndFund(ind) {
-      this.seciList.splice(ind, 1);
-      chrome.storage.sync.set(
-        {
-          seciList: this.seciList,
-        },
-        () => {
-          this.getIndFundData();
         }
       );
     },
@@ -999,44 +657,6 @@ export default {
           console.error("getData error:", error);
         });
     },
-    changeNum(item, ind) {
-      debounce(() => {
-        for (let fund of this.fundListM) {
-          if (fund.code == item.fundcode) {
-            fund.num = item.num;
-          }
-        }
-        chrome.storage.sync.set(
-          {
-            fundListM: this.fundListM,
-          },
-          () => {
-            item.amount = this.calculateMoney(item);
-            item.gains = this.calculate(item, item.hasReplace);
-            item.costGains = this.calculateCost(item);
-            chrome.runtime.sendMessage({ type: "refresh" });
-          }
-        );
-      });
-    },
-    changeCost(item, ind) {
-      debounce(() => {
-        for (let fund of this.fundListM) {
-          if (fund.code == item.fundcode) {
-            fund.cost = item.cost;
-          }
-        }
-        chrome.storage.sync.set(
-          {
-            fundListM: this.fundListM,
-          },
-          () => {
-            item.costGains = this.calculateCost(item);
-            item.costGainsRate = this.calculateCostRate(item);
-          }
-        );
-      });
-    },
     calculateMoney(val) {
       let sum = (val.dwjz * val.num).toFixed(2);
       return sum;
@@ -1067,187 +687,6 @@ export default {
         return sum;
       } else {
         return 0;
-      }
-    },
-    save() {
-      this.fundcode.forEach((code) => {
-        let exists = this.fundListM.some(item => item.code == code);
-        if (!exists) {
-          let name = this.nameCache[code];
-          let val = {
-            code: code,
-            name: name,
-            num: 0,
-          };
-          this.fundListM.push(val);
-        }
-      });
-
-      chrome.storage.sync.set(
-        {
-          fundListM: this.fundListM,
-        },
-        () => {
-          this.fundcode = [];
-          this.getData("add");
-          chrome.runtime.sendMessage({ type: "refresh" });
-        }
-      );
-    },
-    sltInd(val) {
-      let code = val.f13 + "." + val.f12;
-      if (code == this.RealtimeIndcode) {
-        chrome.storage.sync.set(
-          {
-            RealtimeIndcode: null,
-          },
-          () => {
-            this.RealtimeIndcode = null;
-            chrome.runtime.sendMessage({ type: "endInterval" });
-          }
-        );
-      } else {
-        chrome.storage.sync.set(
-          {
-            RealtimeIndcode: code,
-          },
-          () => {
-            this.RealtimeIndcode = code;
-            chrome.runtime.sendMessage({ type: "refresh" });
-          }
-        );
-      }
-    },
-    slt(id) {
-      if (id == this.RealtimeFundcode) {
-        chrome.storage.sync.set(
-          {
-            RealtimeFundcode: null,
-          },
-          () => {
-            this.RealtimeFundcode = null;
-            chrome.runtime.sendMessage({ type: "endInterval" });
-          }
-        );
-      } else {
-        chrome.storage.sync.set(
-          {
-            RealtimeFundcode: id,
-          },
-          () => {
-            this.RealtimeFundcode = id;
-            chrome.runtime.sendMessage({ type: "refresh" });
-          }
-        );
-      }
-    },
-    dlt(id) {
-      this.fundListM = this.fundListM.filter(function(ele) {
-        return ele.code != id;
-      });
-
-      if (id == this.RealtimeFundcode) {
-        chrome.storage.sync.set(
-          {
-            RealtimeFundcode: null,
-          },
-          () => {
-            this.RealtimeFundcode = null;
-            if (this.BadgeContent == 1) {
-              chrome.runtime.sendMessage({ type: "endInterval" });
-            }
-          }
-        );
-      }
-      chrome.storage.sync.set(
-        {
-          fundListM: this.fundListM,
-        },
-        () => {
-          this.dataList = this.dataList.filter(function(ele) {
-            return ele.fundcode != id;
-          });
-          if (this.BadgeContent == 2) {
-            chrome.runtime.sendMessage({ type: "refresh" });
-          }
-        }
-      );
-    },
-    handleDragStart(e, item) {
-      this.dragging = item;
-    },
-    handleDragOver(e) {
-      e.dataTransfer.dropEffect = "move";
-    },
-    handleDragEnd(e, item) {
-      this.dragging = null;
-      if (item.fundcode) {
-        chrome.storage.sync.set(
-          {
-            fundListM: this.fundListM,
-          },
-          () => {}
-        );
-      } else if (item.f12) {
-        chrome.storage.sync.set(
-          {
-            seciList: this.seciList,
-          },
-          () => {}
-        );
-      }
-    },
-    handleDragEnter(e, item, index) {
-      // 基金排序
-      if (this.dragging && this.dragging.fundcode && item.fundcode) {
-        e.dataTransfer.effectAllowed = "move";
-        if (item.fundcode === this.dragging.fundcode) {
-          return;
-        }
-        const newItems = [...this.fundListM];
-        const src = newItems.findIndex((n) => n.code == this.dragging.fundcode);
-        const dst = newItems.findIndex((n) => n.code == item.fundcode);
-        // // 替换
-        newItems.splice(dst, 0, ...newItems.splice(src, 1));
-
-        this.fundListM = newItems;
-
-        //数据列表也同步更新
-        const newDataItems = [...this.dataList];
-        const dataSrc = newDataItems.findIndex(
-          (n) => n.fundcode == this.dragging.fundcode
-        );
-        const dataDst = newDataItems.findIndex(
-          (n) => n.fundcode == item.fundcode
-        );
-        newDataItems.splice(dataDst, 0, ...newDataItems.splice(dataSrc, 1));
-        this.dataList = newDataItems;
-      } else if (this.dragging && this.dragging.f12 && item.f12) {
-        e.dataTransfer.effectAllowed = "move";
-        if (item.f12 === this.dragging.f12) {
-          return;
-        }
-        const newIndItems = [...this.seciList];
-        const indSrc = newIndItems.findIndex(
-          (n) => n.split(".")[1] == this.dragging.f12
-        );
-        const indDst = newIndItems.findIndex(
-          (n) => n.split(".")[1] == item.f12
-        );
-        newIndItems.splice(indDst, 0, ...newIndItems.splice(indSrc, 1));
-        this.seciList = newIndItems;
-
-        const newIndDataItems = [...this.indFundData];
-        const indDataSrc = newIndDataItems.findIndex(
-          (n) => n.f12 == this.dragging.f12
-        );
-        const indDataDst = newIndDataItems.findIndex((n) => n.f12 == item.f12);
-        newIndDataItems.splice(
-          indDataDst,
-          0,
-          ...newIndDataItems.splice(indDataSrc, 1)
-        );
-        this.indFundData = newIndDataItems;
       }
     },
   },
@@ -1309,9 +748,6 @@ export default {
 
 .table-more-height {
   min-height: 160px;
-}
-.table-drag {
-  cursor: move;
 }
 
 .container {

@@ -2,7 +2,7 @@
   "author": "adbyte",
   "name": "基金量化AI助手 - 实时查看基金涨跌幅，提供AI诊断",
   "description": "AI诊断自选基金，实时查看您关注的基金，助您快速获取实时数据，提供量化决策建议。",
-  "version": "0.0.5",
+  "version": "0.0.11",
   "manifest_version": 3,
   "icons": {
     "16": "icons/icon16.png",
